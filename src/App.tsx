@@ -1,5 +1,5 @@
 import { PlusCircle } from '@phosphor-icons/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import styles from './App.module.css'
 
@@ -9,15 +9,17 @@ import { Input } from './components/Input'
 import { Empty } from './components/List/Empty'
 import { Header as ListHeader } from './components/List/Header'
 import { Item } from './components/List/Item'
+import { api } from './libs/axios'
 
 export interface ITask {
   id: number
-  text: string
+  todo: string
   isChecked: boolean
 }
 
 export function App() {
   const [tasks, setTasks] = useState<ITask[]>([])
+  const [loading, setLoading] = useState(false)
   const [inputValue, setInputValue] = useState('')
 
   const checkedTasksCounter = tasks.reduce((prevValue, currentTask) => {
@@ -28,6 +30,15 @@ export function App() {
     return prevValue
   }, 0)
 
+  async function getTodos(){
+    await api.get('/todos').then((response) => {
+      console.log(response.data)
+      setTasks(response.data.todos)
+    }).catch((error) => {
+      console.log(error)
+    })
+  }
+
   function handleAddTask() {
     if (!inputValue) {
       return
@@ -35,7 +46,7 @@ export function App() {
 
     const newTask: ITask = {
       id: new Date().getTime(),
-      text: inputValue,
+      todo: inputValue,
       isChecked: false,
     }
 
@@ -43,14 +54,13 @@ export function App() {
     setInputValue('')
   }
 
-  function handleRemoveTask(id: number) {
-    const filteredTasks = tasks.filter((task) => task.id !== id)
-
-    if (!confirm('Deseja mesmo apagar essa tarefa?')) {
-      return
-    }
-
-    setTasks(filteredTasks)
+  async function handleRemoveTask(id: number) {
+    setLoading(true);
+    const updatedTasks = tasks.filter((task) => task.id !== id)
+    setTimeout(() =>{
+      setLoading(false);
+      setTasks(updatedTasks)
+    }, 1000)
   }
 
   function handleToggleTask({ id, value }: { id: number; value: boolean }) {
@@ -65,10 +75,14 @@ export function App() {
     setTasks(updatedTasks)
   }
 
+  useEffect(() => {
+    getTodos()
+  },[]);
   return (
     <main>
       <Header />
 
+      {loading && <div className={styles.Overlay}><h2>Aguarde...</h2></div>}
       <section className={styles.content}>
         <div className={styles.taskInfoContainer}>
           <Input

@@ -36,7 +36,7 @@ export function Item({ data, removeTask, toggleTaskStatus }: Props) {
           </span>
 
           <p className={`${styles.paragraph} ${paragraphCheckedClassname}`}>
-            {data.text}
+            {data.todo}
           </p>
         </label>
       </div>
